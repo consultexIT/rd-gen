@@ -1,0 +1,48 @@
+diff --git a/src/hbbs_http/sync.rs b/src/hbbs_http/sync.rs
+index 456789a..abcdefg 100644
+--- a/src/hbbs_http/sync.rs
++++ b/src/hbbs_http/sync.rs
+@@ -123,6 +123,9 @@
+                 // But strangely, sometimes we can get the username before login,
+                 // we may not be able to get the username before login after the next restart.
+                 let mut v = crate::get_sysinfo();
++                if let Some(tid) = get_tenant_id() {
++                    v["tenant_id"] = json!(tid);
++                }
+                 let sys_username = v["username"].as_str().unwrap_or_default().to_string();
+                 // Though the username comparison is only necessary on Windows,
+                 // we still keep the comparison on other platforms for consistency.
+@@ -304,3 +307,33 @@
+ pub fn is_pro() -> bool {
+     PRO.lock().unwrap().clone()
+ }
++
++fn get_tenant_id() -> Option<String> {
++   #[cfg(target_os = "windows")]
++   {
++       use winreg::enums::*;
++       use winreg::RegKey;
++       
++       // Check for Azure AD / Intune Tenant ID
++       // Location 1: HKLM\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\TenantInfo\{TenantID}
++       if let Ok(hk) = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey("SYSTEM\\CurrentControlSet\\Control\\CloudDomainJoin\\TenantInfo") {
++           for name in hk.enum_keys().filter_map(|r| r.ok()) {
++               let t = name.trim().to_string();
++               if !t.is_empty() { return Some(t); }
++           }
++       }
++
++       // Location 2: HKLM\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\JoinInfo\{GUID}\TenantId
++       if let Ok(hk) = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey("SYSTEM\\CurrentControlSet\\Control\\CloudDomainJoin\\JoinInfo") {
++           for name in hk.enum_keys().filter_map(|r| r.ok()) {
++               if let Ok(sub) = hk.open_subkey(&name) {
++                   if let Ok(tid) = sub.get_value::<String, _>("TenantId") {
++                       let t = tid.trim().to_string();
++                       if !t.is_empty() { return Some(t); }
++                   }
++               }
++           }
++       }
++   }
++   None
++}

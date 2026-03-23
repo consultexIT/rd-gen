@@ -1,0 +1,8 @@
+*.pyc
+db.sqlite3
+gunicorn.conf
+.venv
+
+logs*
+
+.DS_Store
