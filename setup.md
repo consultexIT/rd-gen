@@ -60,8 +60,8 @@
 # Open to the directory you want to install rdgen (change /opt to wherever you want)  
 cd /opt
 
-# Clone your rdgen repo, change bryangerlach to your github username
-git clone https://github.com/bryangerlach/rdgen.git
+# Clone your rdgen repo, change consultexIT to your github username
+git clone https://github.com/consultexIT/rdgen.git
 
 # Open the rdgen directory
 cd rdgen

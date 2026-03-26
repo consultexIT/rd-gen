@@ -191,7 +191,7 @@ jobs:
                wget
 
       - name: Checkout source code
-        if: ${{ env.VERSION != 'master' }}
+        if: ${{ env.VERSION != 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -199,7 +199,7 @@ jobs:
           submodules: recursive
        
       - name: Checkout source code
-        if: ${{ env.VERSION == 'master' }}
+        if: ${{ env.VERSION == 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -260,7 +260,7 @@ jobs:
         shell: bash
 
       - name: Restore bridge files
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@main
         with:
           name: bridge-artifact
           path: ./
@@ -391,21 +391,21 @@ jobs:
         continue-on-error: true
         if: fromJson(inputs.extras).cycleMonitor == 'true'
         run: |
-          wget https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/cycle_monitor.diff
+          wget https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/cycle_monitor.diff
           git apply cycle_monitor.diff
 
       - name: use X for offline display instead of orange circle
         continue-on-error: true
         if: fromJson(inputs.extras).xOffline == 'true'
         run: |
-          wget https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/xoffline.diff
+          wget https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/xoffline.diff
           git apply xoffline.diff
 
       - name: hide-cm
         continue-on-error: true
         if: fromJson(inputs.extras).hidecm == 'true'
         run: |
-          wget https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/hidecm.diff
+          wget https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/hidecm.diff
           git apply hidecm.diff
 
       - name: removeNewVersionNotif
@@ -465,7 +465,7 @@ jobs:
           esac
 
       - name: Upload Rustdesk library to Artifacts
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         with:
           name: librustdesk.so.${{ matrix.job.target }}
           path: ./target/${{ matrix.job.target }}/release/liblibrustdesk.so

@@ -31,7 +31,7 @@ jobs:
             }
     steps:
       - name: Checkout source code
-        if: ${{ inputs.version != 'master' }}
+        if: ${{ inputs.version != 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -39,7 +39,7 @@ jobs:
           submodules: recursive
         
       - name: Checkout source code
-        if: ${{ inputs.version == 'master' }}
+        if: ${{ inputs.version == 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -102,7 +102,7 @@ jobs:
           cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         with:
           name: bridge-artifact
           path: |

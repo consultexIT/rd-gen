@@ -128,7 +128,7 @@ jobs:
           data: '{"uuid": "${{ inputs.uuid }}", "status": "5% complete"}'
 
       - name: Checkout source code
-        if: ${{ env.VERSION != 'master' }}
+        if: ${{ env.VERSION != 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -136,7 +136,7 @@ jobs:
           submodules: recursive
 
       - name: Checkout source code
-        if: ${{ env.VERSION == 'master' }}
+        if: ${{ env.VERSION == 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -582,7 +582,7 @@ jobs:
           data: '{"uuid": "${{ inputs.uuid }}", "status": "20% complete"}'
 
       - name: Restore bridge files
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@main
         with:
           name: bridge-artifact
           path: ./

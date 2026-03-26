@@ -141,7 +141,7 @@ jobs:
           data: '{"uuid": "${{ inputs.uuid }}", "status": "5% complete"}'
 
       - name: Checkout source code
-        if: ${{ env.VERSION != 'master' }}
+        if: ${{ env.VERSION != 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
@@ -149,14 +149,14 @@ jobs:
           submodules: recursive
 
       - name: Checkout source code
-        if: ${{ env.VERSION == 'master' }}
+        if: ${{ env.VERSION == 'main' }}
         uses: actions/checkout@v4
         with:
           repository: rustdesk/rustdesk
           submodules: recursive
 
       - name: Restore bridge files
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@main
         with:
           name: bridge-artifact
           path: ./
@@ -166,7 +166,7 @@ jobs:
           choco install -y imagemagick.app --no-progress
           Get-ChildItem -Path "${env:ProgramFiles}" | % { $_.FullName } | Select-String -Pattern "[\/\\]ImageMagick[^\/\\]*$" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
-      - name: fix flutter_gpu_texture_renderer (fixed in master rustdesk)
+      - name: fix flutter_gpu_texture_renderer (fixed in main rustdesk)
         shell: bash
         run: |
           sed -i -e 's|2ded7f146437a761ffe6981e2f742038f85ca68d|08a471bb8ceccdd50483c81cdfa8b81b07b14b87|' ./flutter/pubspec.lock
@@ -269,10 +269,10 @@ jobs:
       - name: allow custom.txt
         continue-on-error: true
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/allowCustom.py -OutFile allowCustom.py
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/allowCustom.py -OutFile allowCustom.py
           python allowCustom.py
           # Remove Setup Server Tip
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/removeSetupServerTip.diff -OutFile removeSetupServerTip.diff
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/removeSetupServerTip.diff -OutFile removeSetupServerTip.diff
           git apply removeSetupServerTip.diff
 
       - name: Fix MSI preprocess for app names with spaces
@@ -419,20 +419,20 @@ jobs:
         continue-on-error: true
         if: fromJson(inputs.extras).cycleMonitor == 'true'
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/cycle_monitor.diff -OutFile cycle_monitor.diff
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/cycle_monitor.diff -OutFile cycle_monitor.diff
           git apply cycle_monitor.diff
 
       - name: use X for offline display instead of orange circle
         continue-on-error: true
         if: fromJson(inputs.extras).xOffline == 'true'
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/xoffline.diff -OutFile xoffline.diff
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/xoffline.diff -OutFile xoffline.diff
           git apply xoffline.diff
 
       - name: Add tenant id support
         continue-on-error: false
         run: |
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/master/.github/patches/tenant_id.diff" -OutFile tenant_id.diff
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/tenant_id.diff" -OutFile tenant_id.diff
           git apply tenant_id.diff
 
       - name: removeNewVersionNotif
@@ -551,7 +551,7 @@ jobs:
           fi
 
       - name: Download RustDeskTempTopMostWindow artifacts
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@main
         if: env.UPLOAD_ARTIFACT == 'true'
         with:
           name: topmostwindow-artifacts
