@@ -1,11 +1,22 @@
+import re
+
 from django import forms
 from PIL import Image
+
+# Safe ref/tag fragment for rustdesk/rustdesk (avoids path/control surprises in CI).
+_VERSION_TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
+
 
 class GenerateForm(forms.Form):
     #Platform
     platform = forms.ChoiceField(choices=[('windows','Windows 64Bit'),('windows-x86','Windows 32Bit'),('linux','Linux'),('android','Android'),('macos','macOS')], initial='windows')
-    version = forms.ChoiceField(choices=[('main','nightly'),('1.4.5','1.4.5'),('1.4.4','1.4.4'),('1.4.3','1.4.3'),('1.4.2','1.4.2'),('1.4.1','1.4.1'),('1.4.0','1.4.0'),('1.3.9','1.3.9'),('1.3.8','1.3.8'),('1.3.7','1.3.7'),('1.3.6','1.3.6'),('1.3.5','1.3.5'),('1.3.4','1.3.4'),('1.3.3','1.3.3')], initial='1.4.5')
-    help_text="'main' is the development version (nightly build) with the latest features but may be less stable"
+    version = forms.CharField(
+        label="RustDesk version",
+        initial="1.4.5",
+        max_length=128,
+        help_text="Any release tag from rustdesk/rustdesk (e.g. 1.4.6), or main for nightly.",
+        widget=forms.TextInput(attrs={"placeholder": "e.g. 1.4.5 or main", "autocomplete": "off"}),
+    )
     delayFix = forms.BooleanField(initial=True, required=False)
 
     #General
@@ -81,6 +92,18 @@ class GenerateForm(forms.Form):
     cycleMonitor = forms.BooleanField(initial=False, required=False)
     xOffline = forms.BooleanField(initial=False, required=False)
     removeNewVersionNotif = forms.BooleanField(initial=False, required=False)
+
+    def clean_version(self):
+        v = (self.cleaned_data.get("version") or "").strip()
+        if not v:
+            raise forms.ValidationError("Version is required.")
+        if v == "main":
+            return v
+        if ".." in v or not _VERSION_TAG_RE.fullmatch(v):
+            raise forms.ValidationError(
+                "Use a valid git tag (e.g. 1.4.5, 1.5.0-rc.1) or main."
+            )
+        return v
 
     def clean_iconfile(self):
         print("checking icon")
