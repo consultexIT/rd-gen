@@ -280,13 +280,11 @@ jobs:
           fi
 
       - name: allow custom.txt
-        continue-on-error: true
+        shell: bash
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/allowCustom.py -OutFile allowCustom.py
-          python allowCustom.py
-          # Remove Setup Server Tip
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/removeSetupServerTip.diff -OutFile removeSetupServerTip.diff
-          git apply removeSetupServerTip.diff
+          sed -i -e '/const KEY:/,/};/d' ./src/common.rs
+          sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
+          sed -i 's|if (!isIncomingOnly) setupServerWidget(),|//if (!isIncomingOnly) setupServerWidget(),|' ./flutter/lib/desktop/pages/connection_page.dart
 
       - name: Fix MSI preprocess for app names with spaces
         continue-on-error: true
@@ -610,16 +608,16 @@ jobs:
       - name: Create custom.txt file
         shell: bash
         run: |
-          echo -n "${{ inputs.custom }}" | cat > ./rustdesk/custom_.txt
+          echo -n "${{ inputs.custom }}" | cat > ./rustdesk/custom.txt
 
-      - name: Verify custom_.txt for MSI packaging
+      - name: Verify custom.txt for MSI packaging
         shell: bash
         run: |
-          if [ ! -f ./rustdesk/custom_.txt ]; then
-            echo "::error::custom_.txt missing from rustdesk/ — MSI will lack client configuration"
+          if [ ! -f ./rustdesk/custom.txt ]; then
+            echo "::error::custom.txt missing from rustdesk/ — MSI will lack client configuration"
             exit 1
           fi
-          echo "custom_.txt present ($(wc -c < ./rustdesk/custom_.txt) bytes)"
+          echo "custom.txt present ($(wc -c < ./rustdesk/custom.txt) bytes)"
 
       - name: Build self-extracted executable
         shell: bash

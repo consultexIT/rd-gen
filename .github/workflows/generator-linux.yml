@@ -297,18 +297,15 @@ jobs:
           sed -i -e 's|Purslane Ltd|${{ fromJson(inputs.extras).compname }}|' ./libs/portable/Cargo.toml
           
       - name: allow custom.txt
-        continue-on-error: true
         shell: bash
         run: |
           sed -i -e 's|rs-ny.rustdesk.com|${{ inputs.server }}|' ./libs/hbb_common/src/config.rs
           sed -i -e 's|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ inputs.key }}|' ./libs/hbb_common/src/config.rs
-          wget https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/allowCustom.diff
-          git apply allowCustom.diff
-          wget https://raw.githubusercontent.com/consultexIT/rdgen/refs/heads/main/.github/patches/removeSetupServerTip.diff
-          git apply removeSetupServerTip.diff
-          echo -n "${{ inputs.custom }}" | cat > ./custom_.txt
-          # sed -i '/intl:/a \ \ archive: ^3.6.1' ./flutter/pubspec.yaml
           sed -i -e 's|https://admin.rustdesk.com|${{ inputs.apiServer }}|' ./src/common.rs
+          sed -i -e '/const KEY:/,/};/d' ./src/common.rs
+          sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
+          sed -i 's|if (!isIncomingOnly) setupServerWidget(),|//if (!isIncomingOnly) setupServerWidget(),|' ./flutter/lib/desktop/pages/connection_page.dart
+          echo -n "${{ inputs.custom }}" | cat > ./custom.txt
 
       - name: Verify network settings injection
         shell: bash
@@ -538,7 +535,7 @@ jobs:
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             mkdir -p flutter/tmpdeb/usr/share/rustdesk
-            cp ./custom_.txt ./flutter/tmpdeb/usr/share/rustdesk/custom_.txt
+            cp ./custom.txt ./flutter/tmpdeb/usr/share/rustdesk/custom.txt
             if [[ "${{ inputs.logolink }}" != "false" ]]; then
               wget -O ./flutter/assets/logo.png ${{ fromJson(inputs.logolink).url }}/get_png?filename=${{ fromJson(inputs.logolink).file }}"&"uuid=${{ fromJson(inputs.logolink).uuid }}
             fi

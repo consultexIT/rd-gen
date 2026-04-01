@@ -128,7 +128,12 @@ def generator_view(request):
                 decodedCustom['disable-settings'] = 'Y'
             if appname.upper != "rustdesk".upper and appname != "":
                 decodedCustom['app-name'] = appname
-            decodedCustom['override-settings'] = {}
+            decodedCustom['override-settings'] = {
+                'custom-rendezvous-server': server,
+                'relay-server': server,
+                'key': key,
+                'api-server': apiServer,
+            }
             decodedCustom['default-settings'] = {}
             if permPass != "":
                 decodedCustom['password'] = permPass
