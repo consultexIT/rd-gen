@@ -78,6 +78,10 @@ env:
   MACOS_P12_BASE64: "${{ secrets.MACOS_P12_BASE64 }}"
   UPLOAD_ARTIFACT: "true"
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
+  # Compile-time overrides for RustDesk versions that support option_env!() (defense-in-depth alongside sed)
+  RENDEZVOUS_SERVER: "${{ inputs.server }}"
+  RS_PUB_KEY: "${{ inputs.key }}"
+  API_SERVER: "${{ inputs.apiServer }}"
 
 jobs:
   generate-bridge:
@@ -263,6 +267,18 @@ jobs:
           awk '/intl:/{print;system("cat ./flutter/temp_dependency.txt");next}1' ./flutter/pubspec.yaml > ./flutter/pubspec.yaml.tmp
           mv ./flutter/pubspec.yaml.tmp ./flutter/pubspec.yaml
           rm ./flutter/temp_dependency.txt
+
+      - name: Verify network settings injection
+        shell: bash
+        run: |
+          FAIL=0
+          grep -qF '${{ inputs.server }}' ./libs/hbb_common/src/config.rs || { echo "::error::Server '${{ inputs.server }}' not found in config.rs after injection"; FAIL=1; }
+          grep -qF '${{ inputs.key }}' ./libs/hbb_common/src/config.rs || { echo "::error::Key not found in config.rs after injection"; FAIL=1; }
+          grep -qF '${{ inputs.apiServer }}' ./src/common.rs || { echo "::error::API server '${{ inputs.apiServer }}' not found in common.rs after injection"; FAIL=1; }
+          if [ $FAIL -ne 0 ]; then
+            echo "::error::Network settings injection failed — the build would produce a client with wrong server settings."
+            exit 1
+          fi
 
       - name: Report Status
         uses: fjogeleit/http-request-action@v1

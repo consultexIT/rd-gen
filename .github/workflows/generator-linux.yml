@@ -79,6 +79,10 @@ env:
   UPLOAD_ARTIFACT: 'true'
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
   STATUS_URL: "${{ secrets.GENURL }}/updategh"
+  # Compile-time overrides for RustDesk versions that support option_env!() (defense-in-depth alongside sed)
+  RENDEZVOUS_SERVER: "${{ inputs.server }}"
+  RS_PUB_KEY: "${{ inputs.key }}"
+  API_SERVER: "${{ inputs.apiServer }}"
 
 jobs:
   generate-bridge-linux:
@@ -305,7 +309,19 @@ jobs:
           echo -n "${{ inputs.custom }}" | cat > ./custom_.txt
           # sed -i '/intl:/a \ \ archive: ^3.6.1' ./flutter/pubspec.yaml
           sed -i -e 's|https://admin.rustdesk.com|${{ inputs.apiServer }}|' ./src/common.rs
-          
+
+      - name: Verify network settings injection
+        shell: bash
+        run: |
+          FAIL=0
+          grep -qF '${{ inputs.server }}' ./libs/hbb_common/src/config.rs || { echo "::error::Server '${{ inputs.server }}' not found in config.rs after injection"; FAIL=1; }
+          grep -qF '${{ inputs.key }}' ./libs/hbb_common/src/config.rs || { echo "::error::Key not found in config.rs after injection"; FAIL=1; }
+          grep -qF '${{ inputs.apiServer }}' ./src/common.rs || { echo "::error::API server '${{ inputs.apiServer }}' not found in common.rs after injection"; FAIL=1; }
+          if [ $FAIL -ne 0 ]; then
+            echo "::error::Network settings injection failed — the build would produce a client with wrong server settings."
+            exit 1
+          fi
+
       - name: change url to custom
         if: fromJson(inputs.extras).urlLink != 'https://rustdesk.com'
         continue-on-error: true

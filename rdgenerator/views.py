@@ -16,6 +16,19 @@ from .models import GithubRun
 from PIL import Image
 from urllib.parse import quote
 
+_DEFAULT_SERVER = 'rs-ny.rustdesk.com'
+_DEFAULT_KEY = 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw='
+
+
+def _normalize_api_server(api_server, server):
+    """Ensure apiServer is a full URL compatible with the sed target (https://admin.rustdesk.com) in common.rs."""
+    if not api_server:
+        return f"https://{server}:21114"
+    if not api_server.startswith(('http://', 'https://')):
+        return f"https://{api_server}"
+    return api_server
+
+
 def generator_view(request):
     if request.method == 'POST':
         form = GenerateForm(request.POST, request.FILES)
@@ -33,11 +46,10 @@ def generator_view(request):
             urlLink = form.cleaned_data['urlLink']
             downloadLink = form.cleaned_data['downloadLink']
             if not server:
-                server = 'rs-ny.rustdesk.com' #default rustdesk server
+                server = _DEFAULT_SERVER
             if not key:
-                key = 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=' #default rustdesk key
-            if not apiServer:
-                apiServer = server+":21114"
+                key = _DEFAULT_KEY
+            apiServer = _normalize_api_server(apiServer, server)
             if not urlLink:
                 urlLink = "https://rustdesk.com"
             if not downloadLink:
@@ -348,16 +360,17 @@ def resize_and_encode_icon(imagefile):
  
 #the following is used when accessed from an external source, like the rustdesk api server
 def startgh(request):
-    #print(request)
     data_ = json.loads(request.body)
-    ####from here run the github action, we need user, repo, access token.
-    url = 'https://api.github.com/repos/'+_settings.GHUSER+'/'+_settings.REPONAME+'/actions/workflows/generator-'+data_.get('platform')+'.yml/dispatches'  
+    server = data_.get('server') or _DEFAULT_SERVER
+    key = data_.get('key') or _DEFAULT_KEY
+    api_server = _normalize_api_server(data_.get('apiServer'), server)
+    url = 'https://api.github.com/repos/'+_settings.GHUSER+'/'+_settings.REPONAME+'/actions/workflows/generator-'+data_.get('platform')+'.yml/dispatches'
     data = {
         "ref":"main",
         "inputs":{
-            "server":data_.get('server'),
-            "key":data_.get('key'),
-            "apiServer":data_.get('apiServer'),
+            "server":server,
+            "key":key,
+            "apiServer":api_server,
             "custom":data_.get('custom'),
             "uuid":data_.get('uuid'),
             "iconlink":data_.get('iconlink'),
@@ -366,7 +379,7 @@ def startgh(request):
             "extras":data_.get('extras'),
             "filename":data_.get('filename')
         }
-    } 
+    }
     headers = {
         'Accept':  'application/vnd.github+json',
         'Content-Type': 'application/json',
