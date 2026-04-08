@@ -61,10 +61,10 @@
 cd /opt
 
 # Clone your rdgen repo, change consultexIT to your github username
-git clone https://github.com/consultexIT/rdgen.git
+git clone https://github.com/consultexIT/rd-gen.git
 
-# Open the rdgen directory
-cd rdgen
+# Open the rd-gen directory
+cd rd-gen
 
 # Setup a python virtual environment called rdgen
 python -m venv .venv

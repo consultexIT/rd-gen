@@ -1,6 +1,6 @@
 services:
   rdgen:
-    # use consultexIT/rdgen:latest for the latest build
+    # use consultexIT/rd-gen:latest for the latest build
     image: bryangerlach/rdgen:latest
     restart: unless-stopped
     environment:
