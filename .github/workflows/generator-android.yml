@@ -401,24 +401,33 @@ jobs:
           sed -i -e 's|!key.is_empty()|false|' ./src/client.rs
 
       - name: add cycle monitors to toolbar
-        continue-on-error: true
         if: fromJson(inputs.extras).cycleMonitor == 'true'
+        shell: bash
         run: |
-          wget https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.diff
+          set -euo pipefail
+          wget --fail --no-verbose -O cycle_monitor.diff \
+            'https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.diff'
+          test -s cycle_monitor.diff
           git apply cycle_monitor.diff
 
       - name: use X for offline display instead of orange circle
-        continue-on-error: true
         if: fromJson(inputs.extras).xOffline == 'true'
+        shell: bash
         run: |
-          wget https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/xoffline.diff
+          set -euo pipefail
+          wget --fail --no-verbose -O xoffline.diff \
+            'https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/xoffline.diff'
+          test -s xoffline.diff
           git apply xoffline.diff
 
       - name: hide-cm
-        continue-on-error: true
         if: fromJson(inputs.extras).hidecm == 'true'
+        shell: bash
         run: |
-          wget https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/hidecm.diff
+          set -euo pipefail
+          wget --fail --no-verbose -O hidecm.diff \
+            'https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/hidecm.diff'
+          test -s hidecm.diff
           git apply hidecm.diff
 
       - name: removeNewVersionNotif

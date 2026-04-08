@@ -483,16 +483,22 @@ jobs:
           sed -i '' -e 's|!key.is_empty()|false|' ./src/client.rs
 
       - name: add cycle monitors to toolbar
-        continue-on-error: true
         if: fromJson(inputs.extras).cycleMonitor == 'true'
+        shell: bash
         run: |
-          git apply ${{ github.workspace }}/.github/patches/cycle_monitor.diff
+          set -euo pipefail
+          p="${{ github.workspace }}/.github/patches/cycle_monitor.diff"
+          test -f "$p" && test -s "$p"
+          git apply "$p"
 
       - name: use X for offline display instead of orange circle
-        continue-on-error: true
         if: fromJson(inputs.extras).xOffline == 'true'
+        shell: bash
         run: |
-          git apply ${{ github.workspace }}/.github/patches/xoffline.diff
+          set -euo pipefail
+          p="${{ github.workspace }}/.github/patches/xoffline.diff"
+          test -f "$p" && test -s "$p"
+          git apply "$p"
 
       - name: hide-cm
         continue-on-error: true
@@ -533,10 +539,13 @@ jobs:
           fi
 
       - name: statussort
-        continue-on-error: true
         if: fromJson(inputs.extras).statussort == 'true'
+        shell: bash
         run: |
-          git apply ${{ github.workspace }}/.github/patches/statussort.diff
+          set -euo pipefail
+          p="${{ github.workspace }}/.github/patches/statussort.diff"
+          test -f "$p" && test -s "$p"
+          git apply "$p"
 
       - name: removeNewVersionNotif
         continue-on-error: true

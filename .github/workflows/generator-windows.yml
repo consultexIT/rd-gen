@@ -427,23 +427,24 @@ jobs:
           sed -i -e 's|!key.is_empty()|false|' ./src/client.rs
 
       - name: add cycle monitors to toolbar
-        continue-on-error: true
         if: fromJson(inputs.extras).cycleMonitor == 'true'
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.diff -OutFile cycle_monitor.diff
+          curl.exe -fSL -o cycle_monitor.diff "https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.diff"
+          if ((Get-Item cycle_monitor.diff).Length -lt 8) { throw "cycle_monitor.diff is missing or empty" }
           git apply cycle_monitor.diff
 
       - name: use X for offline display instead of orange circle
-        continue-on-error: true
         if: fromJson(inputs.extras).xOffline == 'true'
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/xoffline.diff -OutFile xoffline.diff
+          curl.exe -fSL -o xoffline.diff "https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/xoffline.diff"
+          if ((Get-Item xoffline.diff).Length -lt 8) { throw "xoffline.diff is missing or empty" }
           git apply xoffline.diff
 
       - name: Add tenant id support
         continue-on-error: false
         run: |
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/tenant_id.diff" -OutFile tenant_id.diff
+          curl.exe -fSL -o tenant_id.diff "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/tenant_id.diff"
+          if ((Get-Item tenant_id.diff).Length -lt 8) { throw "tenant_id.diff is missing or empty" }
           git apply tenant_id.diff
 
       - name: removeNewVersionNotif
