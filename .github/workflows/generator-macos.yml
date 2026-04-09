@@ -268,6 +268,16 @@ jobs:
           mv ./flutter/pubspec.yaml.tmp ./flutter/pubspec.yaml
           rm ./flutter/temp_dependency.txt
 
+      - name: Verify custom.txt signature bypass applied
+        shell: bash
+        run: |
+          if grep -q 'sign::verify' ./src/common.rs; then
+            echo "::error::sign::verify still present in common.rs — custom.txt will be rejected"
+            grep -n 'sign::verify' ./src/common.rs
+            exit 1
+          fi
+          echo "Signature verification removed from common.rs"
+
       - name: Verify network settings injection
         shell: bash
         run: |

@@ -248,6 +248,16 @@ jobs:
           sed -i -e '/const KEY:/,/};/d' ./src/common.rs
           sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
 
+      - name: Verify custom.txt signature bypass applied
+        shell: bash
+        run: |
+          if grep -q 'sign::verify' ./src/common.rs; then
+            echo "::error::sign::verify still present in common.rs — custom.txt will be rejected"
+            grep -n 'sign::verify' ./src/common.rs
+            exit 1
+          fi
+          echo "Signature verification removed from common.rs"
+
       - name: Install LLVM and Clang
         uses: rustdesk-org/install-llvm-action-32bit@main
         with:

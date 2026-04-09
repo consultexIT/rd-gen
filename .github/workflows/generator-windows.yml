@@ -286,6 +286,16 @@ jobs:
           sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
           sed -i 's|if (!isIncomingOnly) setupServerWidget(),|//if (!isIncomingOnly) setupServerWidget(),|' ./flutter/lib/desktop/pages/connection_page.dart
 
+      - name: Verify custom.txt signature bypass applied
+        shell: bash
+        run: |
+          if grep -q 'sign::verify' ./src/common.rs; then
+            echo "::error::sign::verify still present in common.rs — custom.txt will be rejected"
+            grep -n 'sign::verify' ./src/common.rs
+            exit 1
+          fi
+          echo "Signature verification removed from common.rs"
+
       - name: Fix MSI preprocess for app names with spaces
         continue-on-error: true
         shell: bash
@@ -618,7 +628,16 @@ jobs:
             echo "::error::custom.txt missing from rustdesk/ — MSI will lack client configuration"
             exit 1
           fi
-          echo "custom.txt present ($(wc -c < ./rustdesk/custom.txt) bytes)"
+          SIZE=$(wc -c < ./rustdesk/custom.txt)
+          if [ "$SIZE" -lt 10 ]; then
+            echo "::error::custom.txt is only ${SIZE} bytes — inputs.custom is empty or corrupt"
+            exit 1
+          fi
+          echo "custom.txt present (${SIZE} bytes)"
+          echo "--- Decoded custom.txt content ---"
+          cat ./rustdesk/custom.txt | base64 -d 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "(could not decode/pretty-print)"
+          echo "--- Files in rustdesk/ directory ---"
+          ls -la ./rustdesk/ | head -30
 
       - name: Build self-extracted executable
         shell: bash
