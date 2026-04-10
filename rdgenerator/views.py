@@ -59,10 +59,10 @@ def generator_view(request):
             settings = form.cleaned_data['settings']
             appname = form.cleaned_data['appname']
             filename = form.cleaned_data['exename']
-            compname = form.cleaned_data['compname']
-            if not compname:
-                compname = "Purslane Ltd"
-            compname = compname.replace("&","\\&")
+            compname_raw = form.cleaned_data['compname']
+            if not compname_raw:
+                compname_raw = "Purslane Ltd"
+            compname = compname_raw.replace("&", "\\&")
             permPass = form.cleaned_data['permanentPassword']
             theme = form.cleaned_data['theme']
             themeDorO = form.cleaned_data['themeDorO']
@@ -126,7 +126,7 @@ def generator_view(request):
                 decodedCustom['disable-installation'] = 'Y'
             if settings == "settingsN":
                 decodedCustom['disable-settings'] = 'Y'
-            if appname.upper != "rustdesk".upper and appname != "":
+            if appname.lower() != "rustdesk" and appname != "":
                 decodedCustom['app-name'] = appname
             decodedCustom['override-settings'] = {
                 'custom-rendezvous-server': server,
@@ -197,10 +197,38 @@ def generator_view(request):
             for line in overrideManual.splitlines():
                 k, value = line.split('=')
                 decodedCustom['override-settings'][k.strip()] = value.strip()
-            
-            decodedCustomJson = json.dumps(decodedCustom)
 
-            string_bytes = decodedCustomJson.encode("ascii")
+            # RustDesk only applies network UI / client config from override-settings keys below.
+            # _meta is not read by the client; do not store server/key/api only there.
+            _network_override = {
+                'custom-rendezvous-server': server,
+                'relay-server': server,
+                'key': key,
+                'api-server': apiServer,
+            }
+            os_cfg = decodedCustom.setdefault('override-settings', {})
+            for nk, nv in _network_override.items():
+                cur = os_cfg.get(nk)
+                if nk not in os_cfg or cur is None or (isinstance(cur, str) and not cur.strip()):
+                    os_cfg[nk] = nv
+
+            decodedCustom['_meta'] = {
+                'serverIP': server,
+                'key': key,
+                'apiServer': apiServer,
+                'urlLink': urlLink,
+                'downloadLink': downloadLink,
+                'compname': compname_raw,
+                'delayFix': delayFix,
+                'cycleMonitor': cycleMonitor,
+                'xOffline': xOffline,
+                'hidecm': hidecm,
+                'removeNewVersionNotif': removeNewVersionNotif,
+            }
+
+            decodedCustomJson = json.dumps(decodedCustom, ensure_ascii=False)
+
+            string_bytes = decodedCustomJson.encode("utf-8")
             base64_bytes = base64.b64encode(string_bytes)
             encodedCustom = base64_bytes.decode("ascii")
 
