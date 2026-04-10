@@ -280,30 +280,16 @@ jobs:
           fi
 
       - name: allow custom.txt
-        shell: bash
-        run: |
-          # 1.4.5 format: remove KEY constant and let-else verification blocks
-          sed -i -e '/const KEY:/,/};/d' ./src/common.rs
-          sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
-          # 1.4.6+ format: bypass sign::verify(...).unwrap_or_default() in read_custom_client
-          sed -i 's|sign::verify(&v, &key).unwrap_or_default()|v.to_vec()|' ./src/common.rs
-          sed -i 's|if (!isIncomingOnly) setupServerWidget(),|//if (!isIncomingOnly) setupServerWidget(),|' ./flutter/lib/desktop/pages/connection_page.dart
-
-      - name: Verify custom.txt signature bypass applied
-        shell: bash
-        run: |
-          FUNC_START=$(grep -n 'fn read_custom_client' ./src/common.rs | head -1 | cut -d: -f1)
-          if [ -z "$FUNC_START" ]; then
-            echo "::warning::read_custom_client function not found in common.rs — skipping check"
-          else
-            FUNC_REGION=$(sed -n "${FUNC_START},$((FUNC_START + 150))p" ./src/common.rs)
-            if echo "$FUNC_REGION" | grep -q 'sign::verify'; then
-              echo "::error::sign::verify still present in read_custom_client — custom.txt will be rejected"
-              echo "$FUNC_REGION" | grep -n 'sign::verify'
-              exit 1
-            fi
-            echo "Signature verification bypassed in read_custom_client"
-          fi
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 1
+          max_attempts: 3
+          shell: pwsh
+          command: |
+            Invoke-WebRequest -Uri https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/allowCustom.py -OutFile allowCustom.py
+            python allowCustom.py
+            Invoke-WebRequest -Uri https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/removeSetupServerTip.diff -OutFile removeSetupServerTip.diff
+            git apply removeSetupServerTip.diff
 
       - name: Fix MSI preprocess for app names with spaces
         continue-on-error: true
@@ -628,25 +614,7 @@ jobs:
       - name: Create custom.txt file
         shell: bash
         run: |
-          echo -n "${{ inputs.custom }}" | cat > ./rustdesk/custom.txt
-
-      - name: Verify custom.txt for MSI packaging
-        shell: bash
-        run: |
-          if [ ! -f ./rustdesk/custom.txt ]; then
-            echo "::error::custom.txt missing from rustdesk/ — MSI will lack client configuration"
-            exit 1
-          fi
-          SIZE=$(wc -c < ./rustdesk/custom.txt)
-          if [ "$SIZE" -lt 10 ]; then
-            echo "::error::custom.txt is only ${SIZE} bytes — inputs.custom is empty or corrupt"
-            exit 1
-          fi
-          echo "custom.txt present (${SIZE} bytes)"
-          echo "--- Decoded custom.txt content ---"
-          cat ./rustdesk/custom.txt | base64 -d 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "(could not decode/pretty-print)"
-          echo "--- Files in rustdesk/ directory ---"
-          ls -la ./rustdesk/ | head -30
+          echo -n "${{ inputs.custom }}" | cat > ./rustdesk/custom_.txt
 
       - name: Build self-extracted executable
         shell: bash

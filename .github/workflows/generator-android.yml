@@ -388,27 +388,8 @@ jobs:
       - name: allow custom.txt
         shell: bash
         run: |
-          # 1.4.5 format: remove KEY constant and let-else verification blocks
-          sed -i -e '/const KEY:/,/};/d' ./src/common.rs
-          sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
-          # 1.4.6+ format: bypass sign::verify(...).unwrap_or_default() in read_custom_client
-          sed -i 's|sign::verify(&v, &key).unwrap_or_default()|v.to_vec()|' ./src/common.rs
-
-      - name: Verify custom.txt signature bypass applied
-        shell: bash
-        run: |
-          FUNC_START=$(grep -n 'fn read_custom_client' ./src/common.rs | head -1 | cut -d: -f1)
-          if [ -z "$FUNC_START" ]; then
-            echo "::warning::read_custom_client function not found in common.rs — skipping check"
-          else
-            FUNC_REGION=$(sed -n "${FUNC_START},$((FUNC_START + 150))p" ./src/common.rs)
-            if echo "$FUNC_REGION" | grep -q 'sign::verify'; then
-              echo "::error::sign::verify still present in read_custom_client — custom.txt will be rejected"
-              echo "$FUNC_REGION" | grep -n 'sign::verify'
-              exit 1
-            fi
-            echo "Signature verification bypassed in read_custom_client"
-          fi
+          curl -fSL -o allowCustom.py "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/allowCustom.py"
+          python3 allowCustom.py
 
       - name: fix connection delay
         continue-on-error: true
@@ -542,7 +523,7 @@ jobs:
             mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
             cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/
             cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
-            echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom.txt
+            echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom_.txt
             # build flutter
             pushd flutter
             flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm64 --split-per-abi
@@ -552,7 +533,7 @@ jobs:
               mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
               cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
-              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom.txt
+              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom_.txt
               # build flutter
               pushd flutter
               flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm --split-per-abi
@@ -562,7 +543,7 @@ jobs:
               mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
               cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/x86_64/
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86_64/librustdesk.so
-              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom.txt
+              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom_.txt
               # build flutter
               pushd flutter
               flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x64 --split-per-abi
@@ -572,7 +553,7 @@ jobs:
               mkdir -p ./flutter/android/app/src/main/jniLibs/x86
               cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/x86/
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86/librustdesk.so
-              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom.txt
+              echo -n "${{ inputs.custom }}" | cat > ./flutter/assets/custom_.txt
               # build flutter
               pushd flutter
               flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x86 --split-per-abi

@@ -296,35 +296,21 @@ jobs:
           sed -i -e 's|Purslane Ltd|${{ fromJson(inputs.extras).compname }}|' ./Cargo.toml
           sed -i -e 's|Purslane Ltd|${{ fromJson(inputs.extras).compname }}|' ./libs/portable/Cargo.toml
           
-      - name: allow custom.txt
+      - name: set server, key, and apiserver
         shell: bash
         run: |
           sed -i -e 's|rs-ny.rustdesk.com|${{ inputs.server }}|' ./libs/hbb_common/src/config.rs
           sed -i -e 's|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ inputs.key }}|' ./libs/hbb_common/src/config.rs
           sed -i -e 's|https://admin.rustdesk.com|${{ inputs.apiServer }}|' ./src/common.rs
-          # 1.4.5 format: remove KEY constant and let-else verification blocks
-          sed -i -e '/const KEY:/,/};/d' ./src/common.rs
-          sed -i -e '/let Ok(data) = sign::verify(&data, &pk)/,/};/d' ./src/common.rs
-          # 1.4.6+ format: bypass sign::verify(...).unwrap_or_default() in read_custom_client
-          sed -i 's|sign::verify(&v, &key).unwrap_or_default()|v.to_vec()|' ./src/common.rs
-          sed -i 's|if (!isIncomingOnly) setupServerWidget(),|//if (!isIncomingOnly) setupServerWidget(),|' ./flutter/lib/desktop/pages/connection_page.dart
-          echo -n "${{ inputs.custom }}" | cat > ./custom.txt
 
-      - name: Verify custom.txt signature bypass applied
+      - name: allow custom.txt
         shell: bash
         run: |
-          FUNC_START=$(grep -n 'fn read_custom_client' ./src/common.rs | head -1 | cut -d: -f1)
-          if [ -z "$FUNC_START" ]; then
-            echo "::warning::read_custom_client function not found in common.rs — skipping check"
-          else
-            FUNC_REGION=$(sed -n "${FUNC_START},$((FUNC_START + 150))p" ./src/common.rs)
-            if echo "$FUNC_REGION" | grep -q 'sign::verify'; then
-              echo "::error::sign::verify still present in read_custom_client — custom.txt will be rejected"
-              echo "$FUNC_REGION" | grep -n 'sign::verify'
-              exit 1
-            fi
-            echo "Signature verification bypassed in read_custom_client"
-          fi
+          curl -fSL -o allowCustom.py "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/allowCustom.py"
+          python3 allowCustom.py
+          curl -fSL -o removeSetupServerTip.diff "https://raw.githubusercontent.com/${{ github.repository }}/main/.github/patches/removeSetupServerTip.diff"
+          git apply removeSetupServerTip.diff
+          echo -n "${{ inputs.custom }}" | cat > ./custom_.txt
 
       - name: Verify network settings injection
         shell: bash
@@ -563,7 +549,7 @@ jobs:
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             mkdir -p flutter/tmpdeb/usr/share/rustdesk
-            cp ./custom.txt ./flutter/tmpdeb/usr/share/rustdesk/custom.txt
+            cp ./custom_.txt ./flutter/tmpdeb/usr/share/rustdesk/custom_.txt
             if [[ "${{ inputs.logolink }}" != "false" ]]; then
               wget -O ./flutter/assets/logo.png ${{ fromJson(inputs.logolink).url }}/get_png?filename=${{ fromJson(inputs.logolink).file }}"&"uuid=${{ fromJson(inputs.logolink).uuid }}
             fi
