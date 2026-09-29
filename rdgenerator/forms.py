@@ -92,6 +92,7 @@ class GenerateForm(forms.Form):
     cycleMonitor = forms.BooleanField(initial=False, required=False)
     xOffline = forms.BooleanField(initial=False, required=False)
     removeNewVersionNotif = forms.BooleanField(initial=False, required=False)
+    noDesktopShortcut = forms.BooleanField(initial=False, required=False)
 
     def clean_version(self):
         v = (self.cleaned_data.get("version") or "").strip()

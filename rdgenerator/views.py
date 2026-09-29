@@ -40,6 +40,7 @@ def generator_view(request):
             xOffline = form.cleaned_data['xOffline']
             hidecm = form.cleaned_data['hidecm']
             removeNewVersionNotif = form.cleaned_data['removeNewVersionNotif']
+            noDesktopShortcut = form.cleaned_data['noDesktopShortcut']
             server = form.cleaned_data['serverIP']
             key = form.cleaned_data['key']
             apiServer = form.cleaned_data['apiServer']
@@ -211,6 +212,7 @@ def generator_view(request):
             extras['cycleMonitor'] = 'true' if cycleMonitor else 'false'
             extras['xOffline'] = 'true' if xOffline else 'false'
             extras['removeNewVersionNotif'] = 'true' if removeNewVersionNotif else 'false'
+            extras['noDesktopShortcut'] = 'true' if noDesktopShortcut else 'false'
             extras['compname'] = compname
             extra_input = json.dumps(extras)
 

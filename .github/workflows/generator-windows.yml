@@ -446,6 +446,14 @@ jobs:
           if ((Get-Item xoffline.diff).Length -lt 8) { throw "xoffline.diff is missing or empty" }
           git apply xoffline.diff
 
+      - name: do not create a desktop shortcut
+        if: fromJson(inputs.extras).noDesktopShortcut == 'true'
+        run: |
+          curl.exe -fSL -o no_desktop_shortcut.py "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github/patches/no_desktop_shortcut.py"
+          if ((Get-Item no_desktop_shortcut.py).Length -lt 8) { throw "no_desktop_shortcut.py is missing or empty" }
+          python no_desktop_shortcut.py
+          if ($LASTEXITCODE -ne 0) { throw "no_desktop_shortcut.py failed" }
+
       - name: Add tenant id support
         continue-on-error: false
         run: |
