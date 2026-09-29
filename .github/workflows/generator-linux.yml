@@ -68,11 +68,13 @@ env:
   FLUTTER_ELINUX_VERSION: "3.16.9"
   TAG_NAME: "${{ inputs.upload-tag }}"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  # vcpkg version: 2024.07.12
-  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
+  # vcpkg baseline must match the vcpkg.json of the RustDesk version being built:
+  # master / 1.5.x -> 9e593bb (vcpkg 2026.07.29), 1.4.2-1.4.9 -> 120deac (vcpkg 2024.07.12)
+  VCPKG_COMMIT_ID: "${{ (fromJson(inputs.extras).version == 'master' || startsWith(fromJson(inputs.extras).version, '1.5.')) && '9e593bb18ea69cc5095e012465dcd675a822ed0d' || '120deac3062162151622ca4860575a33844ba10b' }}"
+  VCPKG_CMAKE_VERSION: "4.3.0"
   ARMV7_VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836"
   VERSION: "${{ fromJson(inputs.extras).version }}"
-  NDK_VERSION: "r27c"
+  NDK_VERSION: "r28c" # upstream RustDesk uses r28c since 1.4.7 (16 KB page-aligned .so by default)
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: "${{ secrets.ANDROID_SIGNING_KEY }}"
   MACOS_P12_BASE64: "${{ secrets.MACOS_P12_BASE64 }}"
@@ -217,6 +219,15 @@ jobs:
         with:
           name: bridge-artifact
           path: ./
+
+      # vcpkg 2026.07.29's SPDX scripts require CMake 4.3+, but this ARM64 runner selects CMake 3.31.
+      - name: Install CMake for vcpkg on Linux ARM64
+        if: matrix.job.arch == 'aarch64' && env.UPLOAD_ARTIFACT == 'true' && env.VCPKG_COMMIT_ID == '9e593bb18ea69cc5095e012465dcd675a822ed0d'
+        run: |
+          python3 -m pip install --user "cmake==${VCPKG_CMAKE_VERSION}"
+          user_base="$(python3 -m site --user-base)"
+          "${user_base}/bin/cmake" --version
+          echo "${user_base}/bin" >> "${GITHUB_PATH}"
 
       - name: Setup vcpkg with Github Actions binary cache
         if: matrix.job.arch == 'x86_64' || env.UPLOAD_ARTIFACT == 'true'
