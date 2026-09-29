@@ -916,6 +916,7 @@ jobs:
             -H "Content-Type: multipart/form-data" \
             -H "Authorization: Bearer ${{ fromJson(inputs.extras).token }}" \
             -F "file=@$GITHUB_WORKSPACE/${{ inputs.filename }}-${{ matrix.job.arch }}.dmg" \
+            -F "uuid=${{ inputs.uuid }}" \
             "${{ inputs.apiServer }}/api/save_custom_client"
 
       - name: Report Status
