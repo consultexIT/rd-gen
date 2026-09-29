@@ -41,6 +41,7 @@ def generator_view(request):
             hidecm = form.cleaned_data['hidecm']
             removeNewVersionNotif = form.cleaned_data['removeNewVersionNotif']
             silentTerminal = form.cleaned_data['silentTerminal']
+            silentDesktop = form.cleaned_data['silentDesktop']
             noDesktopShortcut = form.cleaned_data['noDesktopShortcut']
             server = form.cleaned_data['serverIP']
             key = form.cleaned_data['key']
@@ -218,6 +219,7 @@ def generator_view(request):
             extras['xOffline'] = 'true' if xOffline else 'false'
             extras['removeNewVersionNotif'] = 'true' if removeNewVersionNotif else 'false'
             extras['silentTerminal'] = 'true' if silentTerminal else 'false'
+            extras['silentDesktop'] = 'true' if silentDesktop else 'false'
             extras['noDesktopShortcut'] = 'true' if noDesktopShortcut else 'false'
             extras['compname'] = compname
             extra_input = json.dumps(extras)

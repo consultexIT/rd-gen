@@ -447,13 +447,16 @@ jobs:
           if ((Get-Item xoffline.diff).Length -lt 8) { throw "xoffline.diff is missing or empty" }
           git apply xoffline.diff
 
-      - name: run terminal sessions silently in the background
-        if: fromJson(inputs.extras).silentTerminal == 'true'
+      - name: run selected session types silently in the background
+        if: fromJson(inputs.extras).silentTerminal == 'true' || fromJson(inputs.extras).silentDesktop == 'true'
+        env:
+          SILENT_TERMINAL: ${{ fromJson(inputs.extras).silentTerminal }}
+          SILENT_DESKTOP: ${{ fromJson(inputs.extras).silentDesktop }}
         run: |
-          curl.exe -fSL -o silent_terminal.py "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github/patches/silent_terminal.py"
-          if ((Get-Item silent_terminal.py).Length -lt 8) { throw "silent_terminal.py is missing or empty" }
-          python silent_terminal.py
-          if ($LASTEXITCODE -ne 0) { throw "silent_terminal.py failed" }
+          curl.exe -fSL -o silent_sessions.py "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github/patches/silent_sessions.py"
+          if ((Get-Item silent_sessions.py).Length -lt 8) { throw "silent_sessions.py is missing or empty" }
+          python silent_sessions.py
+          if ($LASTEXITCODE -ne 0) { throw "silent_sessions.py failed" }
 
       - name: do not create a desktop shortcut
         if: fromJson(inputs.extras).noDesktopShortcut == 'true'

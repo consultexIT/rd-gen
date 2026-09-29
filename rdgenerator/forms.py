@@ -93,6 +93,7 @@ class GenerateForm(forms.Form):
     xOffline = forms.BooleanField(initial=False, required=False)
     removeNewVersionNotif = forms.BooleanField(initial=False, required=False)
     silentTerminal = forms.BooleanField(initial=False, required=False)
+    silentDesktop = forms.BooleanField(initial=False, required=False)
     noDesktopShortcut = forms.BooleanField(initial=False, required=False)
 
     def clean_version(self):
@@ -134,7 +135,9 @@ class GenerateForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
-        if cleaned.get('silentTerminal') and cleaned.get('passApproveMode') == 'click':
-            self.add_error('silentTerminal', "Silent terminal sessions need password approval "
-                                             "(approve mode 'password' or 'both').")
+        if cleaned.get('passApproveMode') == 'click':
+            for field in ('silentTerminal', 'silentDesktop'):
+                if cleaned.get(field):
+                    self.add_error(field, "Silent sessions need password approval "
+                                          "(approve mode 'password' or 'both').")
         return cleaned

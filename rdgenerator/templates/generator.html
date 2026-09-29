@@ -373,6 +373,14 @@
                             {% endfor %}
                         </ul>
                     {% endif %}
+                    <label for="{{ form.silentDesktop.id_for_label }}">{{ form.silentDesktop }} Run remote control (RDP) sessions silently in the background (no connection window, no accept prompt; password required, not with 'Accept sessions via click'; no chat and no file copy via clipboard).</label><br>
+                    {% if form.silentDesktop.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.silentDesktop.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                     <label for="{{ form.noDesktopShortcut.id_for_label }}">{{ form.noDesktopShortcut }} Do not create a desktop shortcut on install (Windows setup and MSI).</label><br>
             </div>
 
