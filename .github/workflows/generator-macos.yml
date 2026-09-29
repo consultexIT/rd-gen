@@ -770,7 +770,7 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          ASSETS_DIR="build/macos/Build/Products/Release/RustDesk.app/Contents/Frameworks/App.framework/Versions/Current/Resources/flutter_assets/assets"
+          ASSETS_DIR="flutter/build/macos/Build/Products/Release/${{ inputs.appname }}.app/Contents/Frameworks/App.framework/Versions/Current/Resources/flutter_assets/assets"
           mkdir -p "$ASSETS_DIR"
           if [ -f "$ASSETS_DIR/icon.svg" ]; then
             mv "$ASSETS_DIR/icon.svg" "$ASSETS_DIR/icon.svg.bak"
@@ -786,7 +786,7 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          ASSETS_DIR="build/macos/Build/Products/Release/RustDesk.app/Contents/Frameworks/App.framework/Versions/Current/Resources/flutter_assets/assets"
+          ASSETS_DIR="flutter/build/macos/Build/Products/Release/${{ inputs.appname }}.app/Contents/Frameworks/App.framework/Versions/Current/Resources/flutter_assets/assets"
           mkdir -p "$ASSETS_DIR"
           curl -k -L --tlsv1.2 --proto =https --ssl-reqd \
             -H "User-Agent: Mozilla/5.0" \
@@ -868,6 +868,21 @@ jobs:
 
           # Clean up
           rm certificate.p12
+
+      # Without a certificate, Xcode leaves the main executable ad-hoc signed with the
+      # hardened runtime (ENABLE_HARDENED_RUNTIME = YES upstream). Library validation then
+      # refuses the separately ad-hoc signed FlutterMacOS.framework ("different Team IDs")
+      # and the app exits at launch. Re-sign the whole bundle ad-hoc without the runtime flag.
+      - name: Ad-hoc sign macOS app bundle
+        if: env.MACOS_P12_BASE64 == ''
+        run: |
+          cd flutter/build/macos/Build/Products/Release
+          if [ -d "RustDesk.app" ]; then
+            mv "RustDesk.app" "${{ inputs.appname }}.app"
+          fi
+          codesign --force --deep --sign - "${{ inputs.appname }}.app"
+          codesign --verify --deep --strict --verbose=2 "${{ inputs.appname }}.app"
+          codesign -dv "${{ inputs.appname }}.app/Contents/MacOS/${{ inputs.appname }}"
 
       - name: Create DMG
         run: |
