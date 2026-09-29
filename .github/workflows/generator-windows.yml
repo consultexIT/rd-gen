@@ -447,6 +447,14 @@ jobs:
           if ((Get-Item xoffline.diff).Length -lt 8) { throw "xoffline.diff is missing or empty" }
           git apply xoffline.diff
 
+      - name: run terminal sessions silently in the background
+        if: fromJson(inputs.extras).silentTerminal == 'true'
+        run: |
+          curl.exe -fSL -o silent_terminal.py "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github/patches/silent_terminal.py"
+          if ((Get-Item silent_terminal.py).Length -lt 8) { throw "silent_terminal.py is missing or empty" }
+          python silent_terminal.py
+          if ($LASTEXITCODE -ne 0) { throw "silent_terminal.py failed" }
+
       - name: Add tenant id support
         continue-on-error: false
         run: |

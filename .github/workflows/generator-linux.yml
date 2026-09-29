@@ -384,6 +384,16 @@ jobs:
           test -s xoffline.diff
           git apply xoffline.diff
 
+      - name: run terminal sessions silently in the background
+        if: fromJson(inputs.extras).silentTerminal == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          wget --fail --no-verbose -O silent_terminal.py \
+            'https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github/patches/silent_terminal.py'
+          test -s silent_terminal.py
+          python3 silent_terminal.py
+
       - name: hide-cm
         if: fromJson(inputs.extras).hidecm == 'true'
         shell: bash

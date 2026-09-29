@@ -92,6 +92,7 @@ class GenerateForm(forms.Form):
     cycleMonitor = forms.BooleanField(initial=False, required=False)
     xOffline = forms.BooleanField(initial=False, required=False)
     removeNewVersionNotif = forms.BooleanField(initial=False, required=False)
+    silentTerminal = forms.BooleanField(initial=False, required=False)
 
     def clean_version(self):
         v = (self.cleaned_data.get("version") or "").strip()
@@ -129,3 +130,10 @@ class GenerateForm(forms.Form):
                 raise forms.ValidationError("Invalid icon file.")
             except Exception as e: # Catch any other image processing errors
                 raise forms.ValidationError(f"Error processing icon: {e}")
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('silentTerminal') and cleaned.get('passApproveMode') == 'click':
+            self.add_error('silentTerminal', "Silent terminal sessions need password approval "
+                                             "(approve mode 'password' or 'both').")
+        return cleaned

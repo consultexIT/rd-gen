@@ -365,6 +365,14 @@
                     <label for="{{ form.cycleMonitor.id_for_label }}">{{ form.cycleMonitor }} Add a button to cycle through available monitors to the minimized toolbar.</label><br>
                     <label for="{{ form.xOffline.id_for_label }}">{{ form.xOffline }} Display an X for offline devices in the addressbook.</label><br>
                     <label for="{{ form.removeNewVersionNotif.id_for_label }}">{{ form.removeNewVersionNotif }} Remove notification for new versions.</label><br>
+                    <label for="{{ form.silentTerminal.id_for_label }}">{{ form.silentTerminal }} Run terminal sessions silently in the background (no connection window, no accept prompt; password required, not with 'Accept sessions via click').</label><br>
+                    {% if form.silentTerminal.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.silentTerminal.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
             </div>
 
             <div class="section">

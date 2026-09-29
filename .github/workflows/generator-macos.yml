@@ -155,7 +155,7 @@ jobs:
           dest="$RUNNER_TEMP/rdgen"
           mkdir -p "$dest/patches" "$dest/scripts"
           base="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/.github"
-          for f in cycle_monitor.py xoffline.diff statussort.diff disableSettings.diff flutter_3.24.4_dropdown_menu_enableFilter.diff; do
+          for f in cycle_monitor.py xoffline.diff silent_terminal.py statussort.diff disableSettings.diff flutter_3.24.4_dropdown_menu_enableFilter.diff; do
             curl -fsSL -o "$dest/patches/$f" "$base/patches/$f"
             test -s "$dest/patches/$f"
           done
@@ -522,6 +522,15 @@ jobs:
           p="$RDGEN_ASSETS/patches/xoffline.diff"
           test -s "$p"
           git apply "$p"
+
+      - name: run terminal sessions silently in the background
+        if: fromJson(inputs.extras).silentTerminal == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$RDGEN_ASSETS/patches/silent_terminal.py"
+          test -s "$p"
+          python3 "$p"
 
       - name: hide-cm
         continue-on-error: true
