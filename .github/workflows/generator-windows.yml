@@ -435,9 +435,10 @@ jobs:
       - name: add cycle monitors to toolbar
         if: fromJson(inputs.extras).cycleMonitor == 'true'
         run: |
-          curl.exe -fSL -o cycle_monitor.diff "https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.diff"
-          if ((Get-Item cycle_monitor.diff).Length -lt 8) { throw "cycle_monitor.diff is missing or empty" }
-          git apply cycle_monitor.diff
+          curl.exe -fSL -o cycle_monitor.py "https://raw.githubusercontent.com/consultexIT/rd-gen/refs/heads/main/.github/patches/cycle_monitor.py"
+          if ((Get-Item cycle_monitor.py).Length -lt 8) { throw "cycle_monitor.py is missing or empty" }
+          python cycle_monitor.py
+          if ($LASTEXITCODE -ne 0) { throw "cycle_monitor.py failed" }
 
       - name: use X for offline display instead of orange circle
         if: fromJson(inputs.extras).xOffline == 'true'

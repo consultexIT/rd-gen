@@ -146,6 +146,10 @@ def generator_view(request):
             decodedCustom['enable-lan-discovery'] = 'N' if denyLan else 'Y'
             #decodedCustom['direct-server'] = 'Y' if enableDirectIP else 'N'
             decodedCustom['allow-auto-disconnect'] = 'Y' if autoClose else 'N'
+            if cycleMonitor:
+                # RustDesk >= 1.4.8 has a native monitor switch button (see .github/patches/cycle_monitor.py)
+                decodedCustom['default-settings']['allow-monitor-switch-main-toolbar'] = 'Y'
+                decodedCustom['default-settings']['allow-monitor-switch-min-toolbar'] = 'Y'
             if permissionsDorO == "default":
                 decodedCustom['default-settings']['access-mode'] = permissionsType
                 decodedCustom['default-settings']['enable-keyboard'] = 'Y' if enableKeyboard else 'N'
